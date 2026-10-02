@@ -22,7 +22,7 @@ jobs:
           POSTGRES_USER: edu_test
           POSTGRES_PASSWORD: edu_test
           POSTGRES_DB: edu_test
-          
+
         ports:
           - 5432:5432
 
@@ -78,6 +78,9 @@ jobs:
       - name: install frontend dependencies
         run: npm ci --workspace frontend --include-workspace-root=false
 
+      - name: Install Rolldown native binding
+        run: npm install --no-save --package-lock=false --workspace frontend @rolldown/binding-linux-x64-gnu
+      
       - name: Build frontend
         run: npm run build --workspace frontend 
 
