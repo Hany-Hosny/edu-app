@@ -1,36 +1,41 @@
-# Edu Local Application
+# Edu Application
 
-Small local three-tier application for the DevOps handoff.
+A small course and homework app for a Cloud/DevOps take-home assessment. It gives the infrastructure a real workload without adding authentication or a large set of business features.
 
-## Stack
+## What the app does
 
-- Frontend: React + Vite
-- Backend: Node.js + Express
-- Database: PostgreSQL via `pg` connection pool
+- Lists courses and lets you add a course.
+- Lists homework and lets you add a title, description, due date and optional course.
+- Shows summary counts, refresh controls and request feedback.
+- Provides a health endpoint that checks the database connection.
 
-## Local runtime
+There is no login, access control, editing or deletion, file upload, payment flow or exam system. Use demo data only.
 
-| Service | URL / port |
+## Stack and layout
+
+| Directory | Purpose |
 | --- | --- |
-| Frontend | http://localhost:5173 |
-| Backend | http://localhost:5050 |
-| Health | http://localhost:5050/health |
-| PostgreSQL | localhost:5432 |
-| Database | `edu_dev` |
+| `frontend/` | React and Vite UI; Nginx serves the Docker build |
+| `backend/` | Express API using the PostgreSQL `pg` connection pool |
+| `database/init.sql` | Initial course and homework tables |
+| `.github/workflows/ci.yml` | Backend test, frontend build and Docker build checks |
 
-Ports `3000`, `4000`, and `5433` are intentionally not used.
+The root package uses npm workspaces. Run the commands below from the repository root unless noted otherwise.
 
-## Required tools
+## Run locally without Docker
 
-- Node.js 20 or newer
-- npm
-- PostgreSQL running locally and listening on port `5432`
+You need Node.js and npm, plus a running PostgreSQL server. CI and the Dockerfiles use Node 20; use a release compatible with the Vite version in `frontend/package.json`.
 
-## Environment variables
+### 1. Configure the environment
 
-Copy the examples to `.env` files and replace the placeholders. Never commit `.env` files.
+For a fresh checkout, copy the examples. If you already have `.env` files, keep them and check their values instead.
 
-Backend: `backend/.env.example`
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+Set the backend values for your local database:
 
 ```env
 NODE_ENV=development
@@ -43,78 +48,129 @@ DB_PASSWORD=your_local_postgres_password
 CORS_ORIGIN=http://localhost:5173
 ```
 
-Frontend: `frontend/.env.example`
+The current backend example has `PORT=5051`. Change it to `5050` in your local `.env` to match these instructions and the frontend example.
+
+The frontend needs only the API base URL:
 
 ```env
 VITE_API_URL=http://localhost:5050
 ```
 
-## Database initialization
+Do not append `/api`: the frontend adds it when requesting courses and homework. Never put database credentials in the frontend environment. Values prefixed with `VITE_` are included in the browser bundle and are not secrets.
 
-Create the isolated `edu_dev` database, then run [`database/init.sql`](database/init.sql) with your local PostgreSQL credentials.
+### 2. Create the database
 
-The backend also creates the required tables on startup if they do not exist.
-
-## Install and run
-
-Backend:
+Use a local PostgreSQL role that can create databases. Replace `your_local_postgres_user` in these commands with that role; do not assume a role named `postgres` exists on your machine.
 
 ```bash
-cd backend
-npm install
-npm start
+createdb -h localhost -p 5432 -U your_local_postgres_user edu_dev
 ```
 
-Frontend, in a second terminal:
+This creates the separate `edu_dev` database on the existing PostgreSQL server. Skip it if that database already exists. It does not start PostgreSQL or create a separate server instance.
 
 ```bash
-cd frontend
-npm install
-npm run dev -- --host localhost --port 5173
+psql -h localhost -p 5432 -U your_local_postgres_user -d edu_dev -f database/init.sql
 ```
 
-## Tests and build
+This creates the tables. The backend also checks and creates its schema on startup, but it cannot create the database itself. The initialization SQL is not a versioned migration system.
+
+### 3. Install and start
 
 ```bash
-cd backend
-npm test
-
-cd ../frontend
-npm run build
+npm ci
+npm start --workspace backend
 ```
 
-## Application scope
+Keep the backend terminal open. In another terminal at the repository root:
 
-- View courses
-- Add course
-- View homework
-- Add homework
-- `GET /health`
+```bash
+npm run dev --workspace frontend -- --host localhost --port 5173 --strictPort
+```
 
-No authentication, payments, uploads, notifications, exams, grading, Firebase, or complex permissions are included.
+Use these separate commands rather than the root `npm run dev`: that script calls a backend `dev` script which is not currently defined.
 
-## API endpoints
+| Service | Local address |
+| --- | --- |
+| Frontend | http://localhost:5173 |
+| Backend | http://localhost:5050 |
+| Database | `localhost:5432`, database `edu_dev` |
 
-- `GET /health`
-- `GET /api/courses`
-- `POST /api/courses`
-- `GET /api/homework`
-- `POST /api/homework`
+### 4. Check the connection
 
-## DevOps handoff
+```bash
+curl -i http://localhost:5050/health
+curl -i http://localhost:5050/api/courses
+curl -i http://localhost:5050/api/homework
+```
 
-Application services are frontend, backend, and PostgreSQL. The DevOps engineer owns the delivery checks, environment configuration, cloud infrastructure, CI/CD, IAM, secrets, monitoring, and production routing.
+A healthy API returns `{"status":"ok"}`. An empty list is returned as `[]`, which is normal before any records have been added. Add a course and homework in the browser, then refresh to check that they persist.
 
-Required backend variables: `NODE_ENV`, `PORT`, `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`.
+If these requests work but the UI cannot load data, check `VITE_API_URL`, the backend port and `CORS_ORIGIN`. Restart the affected process after changing its environment. A database connection refusal means the PostgreSQL server or port needs checking; rerunning the table SQL will not start the server.
 
-Required frontend variable: `VITE_API_URL`.
+## Run with Docker Compose
 
-No Docker commands are part of this application handoff.
+The repository includes Dockerfiles and a local three-service Compose setup. Docker must be running. This setup uses a PostgreSQL container, not AWS RDS.
 
-## DevOps execution order
+The frontend uses a multi-stage build and copies the static bundle and Nginx configuration into the runtime image. Start the local stack with:
 
-1. Run backend tests and the frontend production build locally.
-2. Run the same checks in GitHub Actions on every push and pull request.
-3. Store production variables in the hosting platform's secret manager; never put them in Git.
-4. Provision the production database and application runtime through Terraform after the cloud target is selected.
-5. Deploy the backend and frontend, then verify `/health`, database connectivity, and the browser flow.
+```bash
+docker compose --env-file backend/.env up --build -d
+docker compose --env-file backend/.env ps
+docker compose --env-file backend/.env logs --tail=100 backend
+```
+
+Use the backend `.env` prepared above for the database name, user and password. Compose overrides the backend database host to `db` and its database port to `5432`. Stop any native frontend/backend processes first, because Compose uses the same host ports.
+
+| Service | Host port | Container port |
+| --- | --- | --- |
+| Frontend | `5173` | `80` |
+| Backend | `5050` | `5050` |
+| PostgreSQL | `5433` | `5432` |
+
+Compose sets the frontend API URL to `http://localhost:5050` at build time. Its database is stored in the `postgres_data` volume, and the initialization script runs when that volume is first initialized.
+
+```bash
+docker compose --env-file backend/.env down
+```
+
+This stops and removes the containers while keeping the database volume. Adding `--volumes` deletes that database data; do not use it unless you intend to reset the local demo.
+
+## Tests and build checks
+
+After installing dependencies and configuring the backend environment:
+
+```bash
+npm test --workspace backend
+npm run lint --workspace frontend
+npm run build --workspace frontend
+```
+
+The backend currently has one health-response test. It mocks the database query, so a passing test does not prove a real database connection or cover course/homework writes. The frontend build checks compilation; it is not an end-to-end browser test.
+
+The [CI workflow](.github/workflows/ci.yml) runs on pushes and pull requests to `main`. It prepares a PostgreSQL service and schema for the backend job, runs the backend test, builds the frontend, then builds both Docker images.
+
+For this assessment, the production frontend and backend images were also built and pushed to AWS ECR and deployed to the EC2 host. Automatic deployment from GitHub Actions is not enabled; the cloud deployment was performed manually after the CI checks passed.
+
+## API
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/health` or `/api/health` | Check API and database connectivity |
+| GET / POST | `/api/courses` | List or add courses |
+| GET / POST | `/api/homework` | List or add homework |
+
+Requests and responses use JSON. These endpoints have no authentication and are intended for assessment data only.
+
+## AWS infrastructure
+
+The companion `edu-infrastructure` repository owns Terraform, AWS networking, EC2, RDS, ECR, IAM and monitoring resources. Keep infrastructure deployment and cleanup instructions there; this repository owns the application, container definitions and CI checks.
+
+The local Compose file is not used for the AWS deployment. In AWS, the frontend and backend run as separate Docker containers on the EC2 instance and share the `edu-net` Docker network. Nginx serves the frontend on port `80` and proxies `/api/` and `/health` to `backend:5050`.
+
+The backend connects to the private RDS PostgreSQL instance. Database credentials are retrieved from AWS Secrets Manager at deployment time rather than stored in the image or repository. The cloud deployment enables PostgreSQL TLS with `DB_SSL=true`.
+
+## Screenshots / Evidence
+
+No sanitized evidence screenshots are included in this checkout yet. Useful application evidence would show a course and homework saved in the UI, still visible after refresh, plus successful API health output. Use the GitHub Actions run for the same commit to demonstrate the test and build results.
+
+Infrastructure screenshots belong in the infrastructure README. Before sharing any capture, remove credentials, passwords, personal email addresses, AWS account IDs and sensitive terminal or browser details. Do not use application artwork as proof of a working deployment.
