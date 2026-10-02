@@ -1,0 +1,14 @@
+node_modules
+**/node_modules
+
+.env
+**/.env
+
+.git
+.DS_Store
+
+terraform
+docs
+
+frontend/dist
+backend/test

@@ -1,0 +1,49 @@
+:root { font-family: Inter, system-ui, sans-serif; color: #17212b; background: #f4f7f9; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+.shell { max-width: 1180px; margin: auto; padding: 36px 24px 64px; }
+.hero { display: flex; justify-content: space-between; gap: 24px; align-items: end; padding: 42px; color: white; background: linear-gradient(135deg, #123c4a, #177f83); border-radius: 28px; box-shadow: 0 20px 55px #123c4a26; }
+.eyebrow, small { margin: 0 0 10px; color: #57d6c9; font-size: 11px; font-weight: 800; letter-spacing: .16em; }
+h1 { max-width: 600px; margin: 0 0 12px; font-size: clamp(34px, 5vw, 60px); line-height: 1; letter-spacing: -.05em; }
+h2 { margin: 0; font-size: 23px; }
+.hero-copy { max-width: 580px; margin: 0; color: #d5f1ed; line-height: 1.6; }
+.hero-actions { display: grid; gap: 12px; justify-items: end; }
+.health { display: flex; align-items: center; gap: 9px; padding: 11px 15px; border: 1px solid #ffffff40; border-radius: 999px; white-space: nowrap; font-size: 13px; }
+.health i { width: 9px; height: 9px; background: #f5bd5b; border-radius: 50%; }
+.health.online i { background: #66e3a7; }
+.health.offline i { background: #ff7b7b; }
+.ghost-button { color: white; background: #ffffff1c; border: 1px solid #ffffff4d; }
+.ghost-button:hover { background: #ffffff30; }
+.notice { position: fixed; right: 24px; bottom: 24px; z-index: 2; max-width: min(520px, calc(100vw - 48px)); padding: 13px 17px; color: white; background: #17212b; border-radius: 12px; box-shadow: 0 12px 30px #17212b30; }
+.notice.success { background: #167f82; }
+.notice.error { background: #a53e43; }
+.stats, .columns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 22px 0; }
+.stats article, .panel { padding: 24px; background: white; border: 1px solid #e3eaee; border-radius: 20px; box-shadow: 0 8px 24px #1e48500d; }
+.stats b { display: block; color: #16878a; font-size: 32px; }
+.stats span, .course span, .row span { display: block; margin-top: 6px; color: #70818b; font-size: 13px; }
+.columns { grid-template-columns: 1fr 1fr; }
+.heading { display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px; }
+.heading em { color: #16878a; font-size: 26px; font-style: normal; }
+form { display: grid; gap: 11px; }
+input, textarea, select { width: 100%; padding: 12px 13px; color: inherit; background: #f8fafb; border: 1px solid #dce5e9; border-radius: 10px; font: inherit; }
+input:focus, textarea:focus, select:focus { outline: 3px solid #57d6c955; border-color: #16878a; }
+textarea { min-height: 86px; resize: vertical; }
+button { padding: 12px 15px; color: white; background: #167f82; border: 0; border-radius: 10px; cursor: pointer; font: inherit; font-weight: 700; transition: transform .15s, opacity .15s, background .15s; }
+button:hover:not(:disabled) { transform: translateY(-1px); background: #126c70; }
+button:disabled { cursor: not-allowed; opacity: .55; }
+.inline { display: flex; margin-bottom: 18px; }
+.inline input { border-radius: 10px 0 0 10px; }
+.inline button { border-radius: 0 10px 10px 0; white-space: nowrap; }
+.form-actions { display: flex; gap: 10px; }
+.form-actions button:last-child { flex: 1; }
+.secondary-button { color: #167f82; background: #e8f3f3; }
+.list { display: grid; gap: 10px; }
+.course, .row { display: flex; align-items: center; gap: 12px; padding: 13px; background: #f7fafb; border-radius: 13px; }
+.course > strong { display: grid; place-items: center; width: 38px; height: 38px; color: white; background: #e18c52; border-radius: 11px; }
+.row { justify-content: space-between; gap: 18px; }
+time { color: #16878a; white-space: nowrap; font-size: 13px; font-weight: 700; }
+.empty { padding: 18px; color: #70818b; background: #f7fafb; border: 1px dashed #cddadd; border-radius: 13px; text-align: center; }
+.helper, .updated { color: #70818b; font-size: 13px; }
+.homework { margin-top: 18px; }
+.updated { margin: 18px 0 0; }
+@media (max-width: 760px) { .hero { display: block; padding: 28px; } .hero-actions { justify-items: stretch; margin-top: 22px; } .health { display: inline-flex; } .stats, .columns { grid-template-columns: 1fr; } .shell { padding: 18px 14px 40px; } .row { align-items: start; flex-direction: column; } }
