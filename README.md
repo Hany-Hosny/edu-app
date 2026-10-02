@@ -2,6 +2,9 @@
 
 A small course and homework app for a Cloud/DevOps take-home assessment. It gives the infrastructure a real workload without adding authentication or a large set of business features.
 
+  <img width="1536" height="1024" alt="Arch" src="https://github.com/user-attachments/assets/f1da1d05-5a4c-466b-a71f-3a01ab9df924" />
+
+
 ## What the app does
 
 - Lists courses and lets you add a course.
