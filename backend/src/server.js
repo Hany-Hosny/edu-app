@@ -17,12 +17,17 @@ const config = {
   corsOrigin: process.env.CORS_ORIGIN || '*',
 };
 
-export const pool = new Pool({
-  host: config.dbHost,
-  port: config.dbPort,
-  database: config.dbName,
-  user: config.dbUser,
-  password: config.dbPassword,
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT || 5432),
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+
+  ssl:
+    process.env.DB_SSL === "true"
+      ? { rejectUnauthorized: false }
+      : false,
 });
 
 app.use(cors({ origin: config.corsOrigin }));
